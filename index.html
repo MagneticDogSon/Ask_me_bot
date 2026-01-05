@@ -1,13 +1,242 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 
 <head>
-    <meta http-equiv="refresh" content="0; url=./Bot_tg/webapp_questionnaire.html" />
-    <title>Redirecting...</title>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Questionnaire</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "brand-black": "#0F0F0F",
+                        "brand-dark-grey": "#202020",
+                        "brand-lime": "#5DD62C",
+                        "brand-green": "#337418",
+                        "brand-white": "#F8F8F8",
+                        "background-main": "#0F0F0F",
+                        "surface-card": "#202020",
+                        "accent-primary": "#5DD62C",
+                        "accent-secondary": "#337418",
+                        "text-primary": "#F8F8F8",
+                        "text-secondary": "#A1A1AA",
+                    },
+                    fontFamily: {
+                        display: ['"Barlow Condensed"', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glow': '0 0 15px rgba(93, 214, 44, 0.15)',
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
+                    }
+                },
+            },
+        };
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #337418;
+            border-radius: 4px;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
+
+        html {
+            height: -webkit-fill-available;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
-<body>
-    <p>Если перенаправление не произошло, <a href="./Bot_tg/webapp_questionnaire.html">нажмите здесь</a>.</p>
+<body
+    class="bg-background-main text-text-primary font-display min-h-screen flex flex-col font-medium tracking-wide antialiased transition-colors duration-300">
+    <main class="flex-1 flex flex-col max-w-md mx-auto w-full p-6 relative">
+        <!-- Header -->
+        <header id="header" class="flex-none pt-8 pb-6 text-center space-y-4">
+            <div id="progress-bar" class="flex justify-center items-center space-x-2 mb-2">
+                <!-- Progress bits injected here -->
+            </div>
+            <p id="step-counter" class="text-xs font-bold uppercase tracking-widest text-text-secondary">
+                ВОПРОС 1 ИЗ 1
+            </p>
+            <h1 id="question-text"
+                class="text-2xl font-bold uppercase tracking-wide text-white leading-tight h-20 flex items-center justify-center">
+                ЗАГРУЗКА...
+            </h1>
+        </header>
+
+        <!-- Dynamic Content -->
+        <div id="options-container" class="flex-1 flex flex-col justify-center space-y-3 mb-8">
+            <!-- Options injected here -->
+        </div>
+
+        <!-- Input for open_text -->
+        <div id="input-container" class="hidden flex-1 flex flex-col justify-center space-y-3 mb-8">
+            <textarea id="open-answer"
+                class="w-full bg-surface-card border-2 border-brand-green rounded p-4 text-white focus:border-brand-lime focus:ring-0 transition-colors uppercase font-bold"
+                rows="4" placeholder="ВАШ ОТВЕТ..."></textarea>
+        </div>
+
+        <!-- Navigation -->
+        <div class="grid grid-cols-2 gap-4 pb-8">
+            <button id="prev-btn" onclick="prevStep()"
+                class="hidden w-full py-3 px-4 bg-surface-card text-brand-white border-2 border-transparent font-bold text-xl uppercase tracking-wider shadow-soft hover:bg-[#2a2a2a] transition-colors">
+                НАЗАД
+            </button>
+            <button id="next-btn" onclick="nextStep()"
+                class="w-full py-3 px-4 bg-brand-lime border-2 border-brand-lime text-brand-black font-bold text-xl uppercase tracking-wider hover:bg-brand-green hover:border-brand-green hover:text-white transition-colors col-span-2">
+                ДАЛЕЕ
+            </button>
+        </div>
+    </main>
+    <div class="fixed inset-0 pointer-events-none -z-10 bg-background-main"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        let currentStep = 0;
+        let questions = [];
+        let answers = [];
+
+        // --- ЛОГИКА ЗАГРУЗКИ ДАННЫХ ИЗ URL HASH ---
+        function loadQuestions() {
+            try {
+                // Пытаемся получить данные из хеша URL (после #)
+                const hash = window.location.hash.substring(1); // убираем #
+                if (hash) {
+                    const decodedJson = decodeURIComponent(hash);
+                    questions = JSON.parse(decodedJson);
+                    console.log("Вопросы загружены из URL:", questions);
+                } else {
+                    // Фолбек для тестирования или если хеш пуст
+                    console.log("Хеш пуст, используем тестовые данные");
+                    questions = [{ question_text: "НЕТ ДАННЫХ В ССЫЛКЕ", type: "open_text" }];
+                }
+            } catch (e) {
+                console.error("Ошибка парсинга:", e);
+                questions = [{ question_text: "ОШИБКА ДАННЫХ", type: "open_text" }];
+            }
+        }
+
+        // Загружаем вопросы при старте
+        loadQuestions();
+
+        function renderStep() {
+            if (!questions || questions.length === 0) return;
+
+            const q = questions[currentStep];
+            document.getElementById('step-counter').textContent = `ВОПРОС ${currentStep + 1} ИЗ ${questions.length}`;
+            document.getElementById('question-text').textContent = q.question_text;
+
+            // Progress Bar
+            const prog = document.getElementById('progress-bar');
+            prog.innerHTML = '';
+            for (let i = 0; i < questions.length; i++) {
+                const dot = document.createElement('div');
+                dot.className = `h-1 flex-1 rounded-full ${i <= currentStep ? 'bg-brand-lime shadow-[0_0_8px_rgba(93,214,44,0.6)]' : 'bg-surface-card'}`;
+                prog.appendChild(dot);
+            }
+
+            // Options vs Input
+            const optCont = document.getElementById('options-container');
+            const inpCont = document.getElementById('input-container');
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+
+            if (q.type === 'multiple_choice') {
+                optCont.classList.remove('hidden');
+                inpCont.classList.add('hidden');
+                optCont.innerHTML = '';
+                q.variants.forEach(v => {
+                    const btn = document.createElement('button');
+                    btn.className = `group w-full text-left px-5 py-4 rounded bg-surface-card border-l-4 border-transparent hover:border-brand-lime shadow-soft hover:shadow-glow transition-all duration-200 active:scale-[0.99] active:bg-[#252525] ${answers[currentStep] === v ? 'border-brand-lime' : ''}`;
+                    btn.onclick = () => selectOption(v);
+                    btn.innerHTML = `<span class="block uppercase font-bold text-lg ${answers[currentStep] === v ? 'text-brand-lime' : 'text-gray-300'} group-hover:text-brand-lime transition-colors">${v}</span>`;
+                    optCont.appendChild(btn);
+                });
+            } else {
+                optCont.classList.add('hidden');
+                inpCont.classList.remove('hidden');
+                document.getElementById('open-answer').value = answers[currentStep] || '';
+            }
+
+            // Buttons
+            if (currentStep === 0) {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('col-span-2');
+            } else {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('col-span-2');
+            }
+
+            nextBtn.textContent = currentStep === questions.length - 1 ? 'ОТПРАВИТЬ' : 'ДАЛЕЕ';
+        }
+
+        function selectOption(val) {
+            answers[currentStep] = val;
+            renderStep();
+        }
+
+        function nextStep() {
+            if (questions[currentStep].type === 'open_text') {
+                answers[currentStep] = document.getElementById('open-answer').value;
+            }
+
+            if (!answers[currentStep] || answers[currentStep].trim() === '') {
+                alert("ПОЖАЛУЙСТА, ДАЙТЕ ОТВЕТ");
+                return;
+            }
+
+            if (currentStep < questions.length - 1) {
+                currentStep++;
+                renderStep();
+            } else {
+                sendData();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep();
+            }
+        }
+
+        function sendData() {
+            const result = questions.map((q, i) => ({
+                question: q.question_text,
+                answer: answers[i]
+            }));
+            tg.sendData(JSON.stringify(result));
+            tg.close();
+        }
+
+        renderStep();
+    </script>
 </body>
 
 </html>

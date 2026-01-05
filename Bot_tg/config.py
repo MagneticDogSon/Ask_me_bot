@@ -19,8 +19,8 @@ PROFILE_FILE = os.path.join(PROJECT_ROOT, "profile.md")
 RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
 WEBAPP_HTML_FILE = os.path.join(PROJECT_ROOT, "webapp_questionnaire.html")
-# Замените на вашу реальную ссылку после деплоя на GitHub Pages
-GITHUB_PAGES_URL = "https://ВАШ_ЛОГИН.github.io/ВАШ_РЕПОЗИТОРИЙ/" 
+# Ссылка на GitHub Pages для WebApp
+GITHUB_PAGES_URL = "https://magneticdogson.github.io/Ask_me_bot/Bot_tg/webapp_questionnaire.html" 
 
 if not os.path.exists(RESULTS_DIR):
     os.makedirs(RESULTS_DIR)

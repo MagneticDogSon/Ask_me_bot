@@ -20,7 +20,7 @@ RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
 WEBAPP_HTML_FILE = os.path.join(PROJECT_ROOT, "webapp_questionnaire.html")
 # Ссылка на GitHub Pages для WebApp
-GITHUB_PAGES_URL = "https://magneticdogson.github.io/Ask_me_bot/Bot_tg/webapp_questionnaire.html" 
+GITHUB_PAGES_URL = "https://magneticdogson.github.io/Ask_me_bot/" 
 
 if not os.path.exists(RESULTS_DIR):
     os.makedirs(RESULTS_DIR)

@@ -1,0 +1,33 @@
+name: Telegram Bot Runner
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    - cron: '0 */6 * * *' # Перезапуск каждые 6 часов (лимит одного прогона)
+  workflow_dispatch: # Позволяет запускать вручную
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          HTTPS_PROXY: "http://user239363:ptxain@172.111.196.164:8864" # Прокси из ваших правил
+          HTTP_PROXY: "http://user239363:ptxain@172.111.196.164:8864"
+        run: python Bot_tg/app.py

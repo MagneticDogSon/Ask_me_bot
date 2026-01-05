@@ -136,7 +136,7 @@
                 const cleanHash = hash.split(/[?&]/)[0];
 
                 if (cleanHash.startsWith('d=')) {
-                    // Новый формат: базовое 64
+                    // Новый формат: Base64
                     const b64 = cleanHash.substring(2);
                     const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
                     const bytes = new Uint8Array(binary.length);

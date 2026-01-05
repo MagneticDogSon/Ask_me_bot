@@ -165,16 +165,18 @@ async def agent_04() -> List[Dict[str, list]]:
 
 # --- URL Generator for Static WebApp (GitHub Pages) ---
 import urllib.parse
+import base64
 
 def generate_webapp_url(base_url: str, questions: List[Dict]) -> str:
     """
-    Генерирует ссылку, добавляя вопросы в хеш URL (encoded JSON).
+    Генерирует ссылку, добавляя вопросы в хеш URL (base64).
     Это позволяет использовать статическую страницу на GitHub Pages.
     """
-    # Минифицируем JSON для экономии места в URL
+    # Минифицируем JSON для экономии места
     json_data = json.dumps(questions, ensure_ascii=False, separators=(',', ':'))
-    encoded_data = urllib.parse.quote(json_data)
-    full_url = f"{base_url}#{encoded_data}"
+    # Кодируем в Base64 (URL-safe)
+    b64_data = base64.urlsafe_b64encode(json_data.encode('utf-8')).decode('utf-8')
+    full_url = f"{base_url}#d={b64_data}"
     
     print(f"[URL GEN] Сгенерирована ссылка длиной {len(full_url)} символов.")
     return full_url

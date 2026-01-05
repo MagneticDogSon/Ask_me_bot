@@ -16,7 +16,8 @@ from Bot_tg.prompts import (
     PROMPT_AGENT_01_PSYCHOLOGY_INSTRUCTION,
     PROMPT_AGENT_02_INSTRUCTION,
     PROMPT_AGENT_03_INSTRUCTION,
-    PROMPT_AGENT_04_INSTRUCTION
+    PROMPT_AGENT_04_INSTRUCTION,
+    PROMPT_AGENT_05_TASK_DECOMPOSITION
 )
 
 # --- Agent 00: Onboarding ---
@@ -33,15 +34,18 @@ chain_fill_profile = (
     | StrOutputParser()
 )
 
-async def generate_onboarding_questions() -> List[Dict]:
+async def generate_onboarding_questions(user_name: str = "Пользователь") -> List[Dict]:
     """Асинхронно генерирует анкету знакомства."""
-    print("\n[AGENT_00] Запуск (flash) для генерации вопросов...")
+    print(f"\n[AGENT_00] Запуск (flash) для генерации вопросов для {user_name}...")
     existing_profile = ""
     if os.path.exists(PROFILE_FILE):
         with open(PROFILE_FILE, "r", encoding="utf-8") as f:
             existing_profile = f.read()
     try:
-        return await chain_generate_questions.ainvoke({"existing_profile": existing_profile})
+        return await chain_generate_questions.ainvoke({
+            "existing_profile": existing_profile,
+            "user_name": user_name
+        })
     except Exception as e:
         print(f"[AGENT_00] Ошибка в цепочке: {e}")
         return []
@@ -162,6 +166,23 @@ async def agent_04() -> List[Dict[str, list]]:
         return []
 
 # --- HTML Renderer for WebApp ---
+
+# --- Agent 05: Task Architect (Goal Decomposition) ---
+
+agent_05_chain = (
+    ChatPromptTemplate.from_template(PROMPT_AGENT_05_TASK_DECOMPOSITION) 
+    | llm_flash 
+    | JsonParser()
+)
+
+async def agent_05(final_goal: str) -> List[Dict]:
+    """Асинхронно запускает цепочку Агента 5 для декомпозиции цели."""
+    print(f"\n[AGENT_05] Запуск (flash) для декомпозиции цели: '{final_goal[:50]}...'")
+    try:
+        return await agent_05_chain.ainvoke({"final_goal": final_goal})
+    except Exception as e:
+        print(f"[AGENT_05] Ошибка в цепочке: {e}")
+        return []
 
 # --- URL Generator for Static WebApp (GitHub Pages) ---
 import urllib.parse

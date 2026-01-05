@@ -125,16 +125,31 @@
         // --- ЛОГИКА ЗАГРУЗКИ ДАННЫХ ИЗ URL HASH ---
         function loadQuestions() {
             try {
-                // Пытаемся получить данные из хеша URL (после #)
-                const hash = window.location.hash.substring(1); // убираем #
-                if (hash) {
-                    const decodedJson = decodeURIComponent(hash);
-                    questions = JSON.parse(decodedJson);
-                    console.log("Вопросы загружены из URL:", questions);
-                } else {
-                    // Фолбек для тестирования или если хеш пуст
-                    console.log("Хеш пуст, используем тестовые данные");
+                let hash = window.location.hash.substring(1);
+                if (!hash) {
                     questions = [{ question_text: "НЕТ ДАННЫХ В ССЫЛКЕ", type: "open_text" }];
+                    return;
+                }
+
+                let jsonStr = "";
+                // Убираем параметры Telegram (всё после ? или &)
+                const cleanHash = hash.split(/[?&]/)[0];
+
+                if (cleanHash.startsWith('d=')) {
+                    // Новый формат: базовое 64
+                    const b64 = cleanHash.substring(2);
+                    const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    jsonStr = new TextDecoder().decode(bytes);
+                } else {
+                    // Старый формат: прямой JSON
+                    jsonStr = decodeURIComponent(cleanHash);
+                }
+
+                if (jsonStr) {
+                    questions = JSON.parse(jsonStr);
+                    console.log("Вопросы загружены:", questions);
                 }
             } catch (e) {
                 console.error("Ошибка парсинга:", e);

@@ -18,9 +18,11 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 PROFILE_FILE = os.path.join(PROJECT_ROOT, "profile.md")
 RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
-WEBAPP_HTML_FILE = os.path.join(PROJECT_ROOT, "webapp_questionnaire.html")
+WEBAPP_HTML_FILE = os.path.join(PROJECT_ROOT, "index.html")
 # Ссылка на GitHub Pages для WebApp
 GITHUB_PAGES_URL = "https://magneticdogson.github.io/Ask_me_bot/" 
+GREETING_QUESTIONS_FILE = os.path.join(PROJECT_ROOT, "defaults", "greeting_questions.json") 
+TELOS_DEFAULT_FILE = os.path.join(PROJECT_ROOT, "defaults", "telos.md") 
 
 if not os.path.exists(RESULTS_DIR):
     os.makedirs(RESULTS_DIR)
@@ -28,14 +30,27 @@ if not os.path.exists(RESULTS_DIR):
 # --- Прокси (Proxy) ---
 def setup_proxy():
     """Устанавливает переменные окружения для HTTP и HTTPS прокси."""
-    host = "172.111.196.164"
-    port = "8864"
-    user = "user239363"
-    password = "ptxain"
-    proxy_url = f"http://{user}:{password}@{host}:{port}"
-    os.environ['HTTP_PROXY'] = proxy_url
-    os.environ['HTTPS_PROXY'] = proxy_url
-    print(f"[PROXY] Прокси установлен: {proxy_url}")
+    # Пытаемся получить готовый URL прокси из переменных окружения
+    proxy_url = os.getenv("HTTP_PROXY")
+    
+    # Если переменной нет, пробуем собрать из частей (рекомендуется задать их в .env)
+    if not proxy_url:
+        host = os.getenv("PROXY_HOST", "172.111.196.164") # Fallback (лучше убрать в продакшене)
+        port = os.getenv("PROXY_PORT", "8864")
+        user = os.getenv("PROXY_USER", "user239363")
+        password = os.getenv("PROXY_PASS", "ptxain")
+        
+        if host and port and user and password:
+            proxy_url = f"http://{user}:{password}@{host}:{port}"
+    
+    if proxy_url:
+        os.environ['HTTP_PROXY'] = proxy_url
+        os.environ['HTTPS_PROXY'] = proxy_url
+        # Маскируем пароль при выводе
+        safe_url = proxy_url.split('@')[-1] if '@' in proxy_url else proxy_url
+        print(f"[PROXY] Прокси установлен: ...@{safe_url}")
+    else:
+        print("[PROXY] Переменные для прокси не найдены, работаем напрямую.")
 
 # Активация прокси
 setup_proxy()
@@ -81,16 +96,6 @@ def load_prompt_text(file_path: str) -> str:
     except FileNotFoundError:
         print(f"[ERROR] Файл промпта не найден: {file_path}")
         return ""
-
-class QuestionParser(StrOutputParser):
-    """Парсер для извлечения списка вопросов и вариантов из ответа модели."""
-    def parse(self, text: str) -> List[Dict[str, list]]:
-        questions_data = []
-        pattern = re.compile(r"Вопрос \d+: (.*?)\nВарианты \d+:\n- (.*?)\n- (.*?)\n- (.*?)\n- (.*?)")
-        matches = pattern.findall(text)
-        for match in matches:
-            questions_data.append({"question_text": match[0].strip(), "variants": [v.strip() for v in match[1:]]})
-        return questions_data
 
 class JsonParser(StrOutputParser):
     """Парсер для извлечения JSON из ответа модели, даже если он обернут в markdown."""

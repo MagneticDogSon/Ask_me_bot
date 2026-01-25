@@ -21,8 +21,10 @@ RESULTS_FILE = os.path.join(RESULTS_DIR, "results.json")
 WEBAPP_HTML_FILE = os.path.join(PROJECT_ROOT, "index.html")
 # Ссылка на GitHub Pages для WebApp
 GITHUB_PAGES_URL = "https://magneticdogson.github.io/Ask_me_bot/" 
-GREETING_QUESTIONS_FILE = os.path.join(PROJECT_ROOT, "defaults", "greeting_questions.json") 
-TELOS_DEFAULT_FILE = os.path.join(PROJECT_ROOT, "defaults", "telos.md") 
+GREETING_QUESTIONS_FILE = os.path.join(PROJECT_ROOT, "data", "greeting_questions.json") 
+TELOS_DEFAULT_FILE = os.path.join(PROJECT_ROOT, "data", "telos.md") 
+TELOS_QUESTIONS_FILE = os.path.join(PROJECT_ROOT, "data", "telos_questions.json")
+USER_PROGRESS_FILE = os.path.join(RESULTS_DIR, "user_progress.json") 
 
 if not os.path.exists(RESULTS_DIR):
     os.makedirs(RESULTS_DIR)

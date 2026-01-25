@@ -85,5 +85,14 @@ def create_initial_profile(interactions: List[Interaction]) -> str:
                     # Insert after the header
                     template = parts[0] + target_section + formatted_answer + parts[1]
 
+    # Если файл профиля уже существует, делаем бэкап
+    if os.path.exists(PROFILE_FILE):
+        import shutil
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        backup_path = f"{PROFILE_FILE.replace('.md', '')}_{timestamp}_backup.md"
+        shutil.copy2(PROFILE_FILE, backup_path)
+        print(f"[UTILS] Existing profile backed up to {backup_path}")
+
     write_file_sync(PROFILE_FILE, template)
     return template

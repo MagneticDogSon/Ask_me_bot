@@ -33,11 +33,12 @@ Write-Host "📤 Коммитим и пушим изменения..." -Foregrou
 # Добавляем изменения в git
 git add .
 git commit -m "Deploy UI to GitHub Pages"
-git push origin main
+git push origin master
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "🎉 Деплой успешно завершен!" -ForegroundColor Green
     Write-Host "🌐 Приложение будет доступно по адресу: https://magneticdogson.github.io/Ask_me_bot/" -ForegroundColor Yellow
-} else {
+}
+else {
     Write-Host "⚠️ Ошибка при пуше в GitHub!" -ForegroundColor Red
 }
